@@ -1,3 +1,4 @@
+import random
 import traceback
 from funcs import *
 from txt_output import *
@@ -10,16 +11,17 @@ with open(yamlPath, 'r', encoding='utf-8') as f:
     config = yaml.load(f.read(), Loader=yaml.FullLoader)
 
 # 每张图片与背景组合生成的图片总数
-# 如果设置数量过小(if total < processes * len(backs))将导致舍弃部分背景图片
 # 生成的图片总量 = imgs * processes * total
-total = 1
+total = 5
 # 使用的进程数，不大于cpu核心数，这里保留一个核心空闲避免电脑过于卡顿
 processes = multiprocessing.cpu_count() - 1
+# 是否保存标注图片
+save_marked = False
 # 图片路径设置
-backs_dir_path = r'C:\auto_marking\backs'
-images_dir_path = r'C:\auto_marking\images'
-marked_dir_path = r'C:\auto_marking\images_marked'
-output_dir_path = r'C:\auto_marking\output'
+backs_dir_path = r'auto_marking\backs'
+images_dir_path = r'auto_marking\images'
+marked_dir_path = r'auto_marking\images_marked'
+output_dir_path = r'auto_marking\output'
 
 
 def data_marker(img, img_marked, back):
@@ -69,33 +71,32 @@ def data_maker(a, pro):
                 while m < total:
                     img = cv2.imread(images_dir_path + '\\' + k + '\\' + i)
                     img_marked = cv2.imread(marked_dir_path + '\\' + k + '\\' + i)
-                    for j in backs:
-                        if m > total:
-                            break
-                        m += 1
-                        print(k + ' ' + i + ' ' + j + ' ' + str(m))
-                        s = str(m) + str(a)
-                        back = cv2.imread(backs_dir_path + '\\' + j)
-                        data_output, xmin, ymin, xmax, ymax = data_marker(img, img_marked, back)
-                        cv2.imwrite(output_dir_path + "\\images\\" + k + '\\' + s + '.jpg', data_output)
+                    j = random.choice(backs)
+                    m += 1
+                    print(k + ' ' + i + ' ' + j + ' ' + str(m))
+                    s = str(m) + str(a)
+                    back = cv2.imread(backs_dir_path + '\\' + j)
+                    data_output, xmin, ymin, xmax, ymax = data_marker(img, img_marked, back)
+                    cv2.imwrite(output_dir_path + "\\images\\" + k + '\\' + s + '.jpg', data_output)
+                    if save_marked:
                         cv2.rectangle(data_output, (xmin, ymin), (xmax, ymax), (0, 255, 1), 2)
                         cv2.imwrite(output_dir_path + "\\images_marked\\" + k + '\\' + s + '.jpg', data_output)
-                        if data_format == 'voc':
-                            picture_width = back.shape[1]
-                            picture_height = back.shape[0]
-                            txt = voc_xml_maker(s + '.jpg', xmin, ymin, xmax, ymax, k, picture_width, picture_height)
-                            label_name = s + '.xml'
-                        elif data_format == 'yolo':
-                            y, x, n = data_output.shape
-                            txt = yolo_txt_maker(objs.index(k), xmin, ymin, xmax, ymax, x, y)
-                            label_name = s + '.txt'
-                        else:
-                            raise Exception('wrong label_name')
-                        path = output_dir_path + '\\labels\\' + k + '\\' + label_name
-                        fw = open(path, 'w')
-                        fw.write(txt)
-                        fw.close()
-                        # print(s)
+                    if data_format == 'voc':
+                        picture_width = back.shape[1]
+                        picture_height = back.shape[0]
+                        txt = voc_xml_maker(s + '.jpg', xmin, ymin, xmax, ymax, k, picture_width, picture_height)
+                        label_name = s + '.xml'
+                    elif data_format == 'yolo':
+                        y, x, n = data_output.shape
+                        txt = yolo_txt_maker(objs.index(k), xmin, ymin, xmax, ymax, x, y)
+                        label_name = s + '.txt'
+                    else:
+                        raise Exception('wrong label_type')
+                    path = output_dir_path + '\\labels\\' + k + '\\' + label_name
+                    fw = open(path, 'w')
+                    fw.write(txt)
+                    fw.close()
+                    # print(s)
     except (Exception, BaseException) as e:
         exstr = traceback.format_exc()
         print(exstr)
