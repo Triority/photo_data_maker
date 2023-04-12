@@ -1,10 +1,13 @@
 import random
+import time
 import traceback
 from funcs import *
 from txt_output import *
 import os
 import multiprocessing
 import yaml
+time_start = time.time()
+
 
 yamlPath = 'config.yaml'
 with open(yamlPath, 'r', encoding='utf-8') as f:
@@ -50,7 +53,7 @@ def data_marker(img, img_marked, back):
     return back, xmin, ymin, xmax, ymax
 
 
-def data_maker(a, pro):
+def data_maker(a):
     try:
         objs = os.listdir(images_dir_path)
         backs = os.listdir(backs_dir_path)
@@ -69,11 +72,13 @@ def data_maker(a, pro):
             for i in imgs:
                 m = 0
                 while m < total:
+                    if str(a) == '0':
+                        print('time now: ' + str(round(time.time()-time_start, 2)) + 's')
                     img = cv2.imread(images_dir_path + '\\' + k + '\\' + i)
                     img_marked = cv2.imread(marked_dir_path + '\\' + k + '\\' + i)
                     j = random.choice(backs)
                     m += 1
-                    print(k + ' ' + i + ' ' + j + ' ' + str(m))
+                    print(k + ' ' + i + ' ' + str(a) + ' ' + str(m))
                     s = str(m) + str(a)
                     back = cv2.imread(backs_dir_path + '\\' + j)
                     data_output, xmin, ymin, xmax, ymax = data_marker(img, img_marked, back)
@@ -105,9 +110,9 @@ def data_maker(a, pro):
 if __name__ == "__main__":
     pl = multiprocessing.Manager().Lock()
     pool = multiprocessing.Pool(processes)
-    per = int(total / processes)
     for i in range(processes):
-        pool.apply_async(data_maker, args=(str(i), per))
+        pool.apply_async(data_maker, args=(str(i),))
     pool.close()
     pool.join()
     print("Sub-process(es) done.")
+    print('Total time = ' + str(round(time.time()-time_start, 2)) + 's')
