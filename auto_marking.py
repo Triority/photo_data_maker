@@ -3,6 +3,11 @@ from funcs import *
 from txt_output import *
 import os
 import multiprocessing
+import yaml
+
+yamlPath = 'config.yaml'
+with open(yamlPath, 'r', encoding='utf-8') as f:
+    config = yaml.load(f.read(), Loader=yaml.FullLoader)
 
 # 每张图片与背景组合生成的图片总数
 # 如果设置数量过小(if total < processes * len(backs))将导致舍弃部分背景图片
@@ -19,16 +24,20 @@ output_dir_path = r'C:\auto_marking\output'
 
 def data_marker(img, img_marked, back):
     # 亮度，可自定义参数
-    img = random_brightness(img)
-    back = random_brightness(back)
+    img = random_brightness(img, a=config['brightness']['a'], b=config['brightness']['b']
+                            , bright_min=config['brightness']['min'], bright_max=config['brightness']['max'])
+    back = random_brightness(back, a=config['brightness']['a'], b=config['brightness']['b']
+                             , bright_min=config['brightness']['min'], bright_max=config['brightness']['max'])
     # 缩放，可自定义参数
-    r = random.randint(5, 75) / 100 * min(back.shape[0]/img.shape[0], back.shape[1]/img.shape[1])
+    r = random.randint(config['size']['min'], config['size']['max']) / 100 * min(back.shape[0] / img.shape[0]
+                                                                                 , back.shape[1] / img.shape[1])
     img = cv2.resize(img, (0, 0), fx=r, fy=r, interpolation=cv2.INTER_NEAREST)
     img_marked = cv2.resize(img_marked, (0, 0), fx=r, fy=r, interpolation=cv2.INTER_NEAREST)
     # 透视变换，可自定义参数
-    img, points = random_perspective(img, 0.25, 0, 0)
+    img, points = random_perspective(img, config['perspective']['range']
+                                     , config['perspective']['mode'], config['perspective']['direction'])
     # 模糊
-    # img = random_blur(img)
+    img = random_blur(img, config['blur']['r'])
     # copy透视处理
     xc, yc, wc, hc = points_perspective(img_marked, points)
     # 叠加
@@ -43,17 +52,17 @@ def data_maker(a, pro):
     try:
         objs = os.listdir(images_dir_path)
         backs = os.listdir(backs_dir_path)
-        data_format = 'yolo'
+        data_format = config['format']
         for k in objs:
             imgs = os.listdir(images_dir_path + '\\' + k)
             if not os.path.exists(output_dir_path + "\\images\\" + k):
-                print('mkdir:'+output_dir_path + "\\images\\" + k)
+                print('mkdir:' + output_dir_path + "\\images\\" + k)
                 os.makedirs(output_dir_path + "\\images\\" + k)
             if not os.path.exists(output_dir_path + "\\images_marked\\" + k):
-                print('mkdir:'+output_dir_path + "\\images_marked\\" + k)
+                print('mkdir:' + output_dir_path + "\\images_marked\\" + k)
                 os.makedirs(output_dir_path + "\\images_marked\\" + k)
             if not os.path.exists(output_dir_path + "\\labels\\" + k):
-                print('mkdir:'+output_dir_path + "\\labels\\" + k)
+                print('mkdir:' + output_dir_path + "\\labels\\" + k)
                 os.makedirs(output_dir_path + "\\labels\\" + k)
             for i in imgs:
                 m = 0
@@ -64,7 +73,7 @@ def data_maker(a, pro):
                         if m > total:
                             break
                         m += 1
-                        print(k+' '+i+' '+j+' '+str(m))
+                        print(k + ' ' + i + ' ' + j + ' ' + str(m))
                         s = str(m) + str(a)
                         back = cv2.imread(backs_dir_path + '\\' + j)
                         data_output, xmin, ymin, xmax, ymax = data_marker(img, img_marked, back)
@@ -86,7 +95,7 @@ def data_maker(a, pro):
                         fw = open(path, 'w')
                         fw.write(txt)
                         fw.close()
-                        #print(s)
+                        # print(s)
     except (Exception, BaseException) as e:
         exstr = traceback.format_exc()
         print(exstr)
@@ -95,7 +104,7 @@ def data_maker(a, pro):
 if __name__ == "__main__":
     pl = multiprocessing.Manager().Lock()
     pool = multiprocessing.Pool(processes)
-    per = int(total/processes)
+    per = int(total / processes)
     for i in range(processes):
         pool.apply_async(data_maker, args=(str(i), per))
     pool.close()
