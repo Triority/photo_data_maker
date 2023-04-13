@@ -19,7 +19,7 @@ total = 5
 # 使用的进程数，不大于cpu核心数，这里保留一个核心空闲避免电脑过于卡顿
 processes = multiprocessing.cpu_count() - 1
 # 是否保存标注图片
-save_marked = False
+save_marked = True
 # 图片路径设置
 backs_dir_path = r'auto_marking\backs'
 images_dir_path = r'auto_marking\images'
@@ -28,28 +28,37 @@ output_dir_path = r'auto_marking\output'
 
 
 def data_marker(img, img_marked, back):
-    # 亮度，可自定义参数
+    img_h, img_w = img.shape[:2]
+    back_h, back_w = back.shape[:2]
+    # 初始图像翻转
+    img, ret = random_flip(img, config['flip']['mode'])
+    img_marked = cv2.flip(img_marked, ret)
+    back, ret = random_flip(back, config['flip']['mode'])
+    # 亮度随机变化
     img = random_brightness(img, a=config['brightness']['a'], b=config['brightness']['b']
                             , bright_min=config['brightness']['min'], bright_max=config['brightness']['max'])
     back = random_brightness(back, a=config['brightness']['a'], b=config['brightness']['b']
                              , bright_min=config['brightness']['min'], bright_max=config['brightness']['max'])
-    # 缩放，可自定义参数
-    r = random.randint(config['size']['min'], config['size']['max']) / 100 * min(back.shape[0] / img.shape[0]
-                                                                                 , back.shape[1] / img.shape[1])
+    # 缩放
+    r = random.randint(config['size']['min'], config['size']['max']) / 100 * min(back_h / img_h, back_w / img_w)
     img = cv2.resize(img, (0, 0), fx=r, fy=r, interpolation=cv2.INTER_NEAREST)
     img_marked = cv2.resize(img_marked, (0, 0), fx=r, fy=r, interpolation=cv2.INTER_NEAREST)
-    # 透视变换，可自定义参数
+    # 旋转，报错，在改
+    # center = (img_w / 2, img_h / 2)
+    # rotate_matrix = cv2.getRotationMatrix2D(center=center, angle=0, scale=1)
+    # img = cv2.warpAffine(src=img, M=rotate_matrix, dsize=(img_w, img_h))
+    # img_marked = cv2.warpAffine(src=img_marked, M=rotate_matrix, dsize=(img_w, img_h))
+    # 透视变换
     img, points = random_perspective(img, config['perspective']['range']
                                      , config['perspective']['mode'], config['perspective']['direction'])
     # 模糊
     img = random_blur(img, config['blur']['r'])
-    # copy透视处理
+    # copy透视
     xc, yc, wc, hc = points_perspective(img_marked, points)
     # 叠加
     back, x, y = overlay(img, back)
     xmin, ymin = (x + xc, y + yc)
     xmax, ymax = (x + xc + wc, y + yc + hc)
-    # cv2.rectangle(back, (xmin, ymin), (xmax, ymax), (0, 255, 0), 2)
     return back, xmin, ymin, xmax, ymax
 
 

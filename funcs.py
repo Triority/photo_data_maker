@@ -3,6 +3,35 @@ import cv2
 import numpy as np
 
 
+def random_flip(img, mode):
+    if mode == 0:
+        return img, None
+    elif mode == 1:
+        if random.choice([0, 1]):
+            img = cv2.flip(img, 0)
+        return img, 0
+    elif mode == 2:
+        if random.choice([0, 1]):
+            img = cv2.flip(img, 1)
+        return img, 1
+    elif mode == 3:
+        i = random.choice([0, 1, 2, 3])
+        if i:
+            if i == 1:
+                img = cv2.flip(img, 0)
+                return img, 0
+            elif i == 2:
+                img = cv2.flip(img, 1)
+                return img, 1
+            elif i == 3:
+                img = cv2.flip(img, -1)
+                return img, -1
+        else:
+            return img, None
+    else:
+        raise Exception('wrong flip mode')
+
+
 def random_brightness(img, a=30, b=30, bright_min=2, bright_max=254):
     """
     亮度随机变化
