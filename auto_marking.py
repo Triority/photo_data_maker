@@ -90,8 +90,8 @@ def data_maker(a):
                 img_marked = cv2.imread(marked_dir_path + '\\' + k + '\\' + i)
                 j = random.choice(backs)
                 m += 1
-                print(k + ' ' + i + ' ' + str(a) + ' ' + str(m) + ' ' + str(o))
-                s = str(a) + str(o)
+                s = str(a).rjust(3, '0') + str(o).rjust(5, '0')
+                print(k + ' ' + i + ' ' + str(m) + ' ' + str(s))
                 back = cv2.imread(backs_dir_path + '\\' + j)
                 data_output, xmin, ymin, xmax, ymax = data_marker(img, img_marked, back)
                 cv2.imwrite(output_dir_path + "\\images\\" + k + '\\' + s + '.jpg', data_output)
@@ -117,6 +117,15 @@ def data_maker(a):
 
 
 if __name__ == "__main__":
+    if not len(os.listdir(config['output_dir_path'])) == 0:
+        print('此操作将删除output文件夹并重新生成，请确保你已经把数据在其他位置备份或决定丢弃')
+        if not input('输入y回车确认') == 'y':
+            exit()
+    for root, dirs, files in os.walk(config['output_dir_path'], topdown=False):
+        for name in files:
+            os.remove(os.path.join(root, name))
+        for name in dirs:
+            os.rmdir(os.path.join(root, name))
     pl = multiprocessing.Manager().Lock()
     pool = multiprocessing.Pool(processes)
     for i in range(processes):
