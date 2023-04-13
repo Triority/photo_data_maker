@@ -95,7 +95,7 @@ def data_maker(a):
                 back = cv2.imread(backs_dir_path + '\\' + j)
                 data_output, xmin, ymin, xmax, ymax = data_marker(img, img_marked, back)
                 cv2.imwrite(output_dir_path + "\\images\\" + k + '\\' + s + '.jpg', data_output)
-                if config['save_marked']:
+                if random.randint(0, 100) <= config['save_marked']:
                     cv2.rectangle(data_output, (xmin, ymin), (xmax, ymax), (0, 255, 1), 2)
                     cv2.imwrite(output_dir_path + "\\images_marked\\" + k + '\\' + s + '.jpg', data_output)
                 if data_format == 'voc':
