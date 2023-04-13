@@ -65,6 +65,7 @@ def data_maker(a):
     backs = os.listdir(backs_dir_path)
     data_format = config['format']
     for k in objs:
+        o = 0
         imgs = os.listdir(images_dir_path + '\\' + k)
         if not os.path.exists(output_dir_path + "\\images\\" + k):
             print('mkdir:' + output_dir_path + "\\images\\" + k)
@@ -78,6 +79,7 @@ def data_maker(a):
         for i in imgs:
             m = 0
             while m <= total_cpu:
+                o = o + 1
                 if str(a) == '0':
                     print('----------time now: ' + str(round(time.time()-time_start, 2)) + 's')
                     print('----------time this: ' + str(round(time.time()-time_this, 2)) + 's')
@@ -88,8 +90,8 @@ def data_maker(a):
                 img_marked = cv2.imread(marked_dir_path + '\\' + k + '\\' + i)
                 j = random.choice(backs)
                 m += 1
-                print(k + ' ' + i + ' ' + str(a) + ' ' + str(m))
-                s = str(m) + str(a)
+                print(k + ' ' + i + ' ' + str(a) + ' ' + str(m) + ' ' + str(o))
+                s = str(o) + str(a)
                 back = cv2.imread(backs_dir_path + '\\' + j)
                 data_output, xmin, ymin, xmax, ymax = data_marker(img, img_marked, back)
                 cv2.imwrite(output_dir_path + "\\images\\" + k + '\\' + s + '.jpg', data_output)
