@@ -1,30 +1,26 @@
 import random
 import time
-import traceback
 from funcs import *
 from txt_output import *
 import os
 import multiprocessing
 import yaml
+
+
 time_start = time.time()
+time_this = time.time()
 
-
+i_t = 0
 yamlPath = 'config.yaml'
 with open(yamlPath, 'r', encoding='utf-8') as f:
     config = yaml.load(f.read(), Loader=yaml.FullLoader)
 
-# 每张图片与背景组合生成的图片总数
-# 生成的图片总量 = imgs * processes * total
-total = 5
-# 使用的进程数，不大于cpu核心数，这里保留一个核心空闲避免电脑过于卡顿
-processes = multiprocessing.cpu_count() - 1
-# 是否保存标注图片
-save_marked = True
-# 图片路径设置
-backs_dir_path = r'auto_marking\backs'
-images_dir_path = r'auto_marking\images'
-marked_dir_path = r'auto_marking\images_marked'
-output_dir_path = r'auto_marking\output'
+total = config['total']
+processes = multiprocessing.cpu_count() - config['cpu_free']
+backs_dir_path = config['backs_dir_path']
+images_dir_path = config['images_dir_path']
+marked_dir_path = config['marked_dir_path']
+output_dir_path = config['output_dir_path']
 
 
 def data_marker(img, img_marked, back):
@@ -63,57 +59,59 @@ def data_marker(img, img_marked, back):
 
 
 def data_maker(a):
-    try:
-        objs = os.listdir(images_dir_path)
-        backs = os.listdir(backs_dir_path)
-        data_format = config['format']
-        for k in objs:
-            imgs = os.listdir(images_dir_path + '\\' + k)
-            if not os.path.exists(output_dir_path + "\\images\\" + k):
-                print('mkdir:' + output_dir_path + "\\images\\" + k)
-                os.makedirs(output_dir_path + "\\images\\" + k)
-            if not os.path.exists(output_dir_path + "\\images_marked\\" + k):
-                print('mkdir:' + output_dir_path + "\\images_marked\\" + k)
-                os.makedirs(output_dir_path + "\\images_marked\\" + k)
-            if not os.path.exists(output_dir_path + "\\labels\\" + k):
-                print('mkdir:' + output_dir_path + "\\labels\\" + k)
-                os.makedirs(output_dir_path + "\\labels\\" + k)
-            for i in imgs:
-                m = 0
-                while m < total:
-                    if str(a) == '0':
-                        print('time now: ' + str(round(time.time()-time_start, 2)) + 's')
-                    img = cv2.imread(images_dir_path + '\\' + k + '\\' + i)
-                    img_marked = cv2.imread(marked_dir_path + '\\' + k + '\\' + i)
-                    j = random.choice(backs)
-                    m += 1
-                    print(k + ' ' + i + ' ' + str(a) + ' ' + str(m))
-                    s = str(m) + str(a)
-                    back = cv2.imread(backs_dir_path + '\\' + j)
-                    data_output, xmin, ymin, xmax, ymax = data_marker(img, img_marked, back)
-                    cv2.imwrite(output_dir_path + "\\images\\" + k + '\\' + s + '.jpg', data_output)
-                    if save_marked:
-                        cv2.rectangle(data_output, (xmin, ymin), (xmax, ymax), (0, 255, 1), 2)
-                        cv2.imwrite(output_dir_path + "\\images_marked\\" + k + '\\' + s + '.jpg', data_output)
-                    if data_format == 'voc':
-                        picture_width = back.shape[1]
-                        picture_height = back.shape[0]
-                        txt = voc_xml_maker(s + '.jpg', xmin, ymin, xmax, ymax, k, picture_width, picture_height)
-                        label_name = s + '.xml'
-                    elif data_format == 'yolo':
-                        y, x, n = data_output.shape
-                        txt = yolo_txt_maker(objs.index(k), xmin, ymin, xmax, ymax, x, y)
-                        label_name = s + '.txt'
-                    else:
-                        raise Exception('wrong label_type')
-                    path = output_dir_path + '\\labels\\' + k + '\\' + label_name
-                    fw = open(path, 'w')
-                    fw.write(txt)
-                    fw.close()
-                    # print(s)
-    except (Exception, BaseException) as e:
-        exstr = traceback.format_exc()
-        print(exstr)
+    global time_this, i_t
+    total_cpu = int(total / processes)
+    objs = os.listdir(images_dir_path)
+    backs = os.listdir(backs_dir_path)
+    data_format = config['format']
+    for k in objs:
+        imgs = os.listdir(images_dir_path + '\\' + k)
+        if not os.path.exists(output_dir_path + "\\images\\" + k):
+            print('mkdir:' + output_dir_path + "\\images\\" + k)
+            os.makedirs(output_dir_path + "\\images\\" + k)
+        if not os.path.exists(output_dir_path + "\\images_marked\\" + k):
+            print('mkdir:' + output_dir_path + "\\images_marked\\" + k)
+            os.makedirs(output_dir_path + "\\images_marked\\" + k)
+        if not os.path.exists(output_dir_path + "\\labels\\" + k):
+            print('mkdir:' + output_dir_path + "\\labels\\" + k)
+            os.makedirs(output_dir_path + "\\labels\\" + k)
+        for i in imgs:
+            m = 0
+            while m <= total_cpu:
+                if str(a) == '0':
+                    print('----------time now: ' + str(round(time.time()-time_start, 2)) + 's')
+                    print('----------time this: ' + str(round(time.time()-time_this, 2)) + 's')
+                    print('----------img total(about): ' + str(i_t*processes))
+                    time_this = time.time()
+                    i_t = i_t + 1
+                img = cv2.imread(images_dir_path + '\\' + k + '\\' + i)
+                img_marked = cv2.imread(marked_dir_path + '\\' + k + '\\' + i)
+                j = random.choice(backs)
+                m += 1
+                print(k + ' ' + i + ' ' + str(a) + ' ' + str(m))
+                s = str(m) + str(a)
+                back = cv2.imread(backs_dir_path + '\\' + j)
+                data_output, xmin, ymin, xmax, ymax = data_marker(img, img_marked, back)
+                cv2.imwrite(output_dir_path + "\\images\\" + k + '\\' + s + '.jpg', data_output)
+                if config['save_marked']:
+                    cv2.rectangle(data_output, (xmin, ymin), (xmax, ymax), (0, 255, 1), 2)
+                    cv2.imwrite(output_dir_path + "\\images_marked\\" + k + '\\' + s + '.jpg', data_output)
+                if data_format == 'voc':
+                    picture_width = back.shape[1]
+                    picture_height = back.shape[0]
+                    txt = voc_xml_maker(s + '.jpg', xmin, ymin, xmax, ymax, k, picture_width, picture_height)
+                    label_name = s + '.xml'
+                elif data_format == 'yolo':
+                    y, x, n = data_output.shape
+                    txt = yolo_txt_maker(objs.index(k), xmin, ymin, xmax, ymax, x, y)
+                    label_name = s + '.txt'
+                else:
+                    raise Exception('wrong label_type')
+                path = output_dir_path + '\\labels\\' + k + '\\' + label_name
+                fw = open(path, 'w')
+                fw.write(txt)
+                fw.close()
+                # print(s)
 
 
 if __name__ == "__main__":

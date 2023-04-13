@@ -3,6 +3,21 @@ import cv2
 import numpy as np
 
 
+def n_random(loc, scale, min, max):
+    """
+    生成指定范围内的随机正态分布数
+    :param loc: 平均值
+    :param scale: 标准差
+    :param min: 范围最小值
+    :param max: 范围最大值
+    :return: 得到的随机值
+    """
+    while True:
+        n_r = np.random.normal(loc, scale, size=(1, 1))[1][1]
+        if min < n_r < max:
+            break
+    return n_r
+
 def random_flip(img, mode):
     if mode == 0:
         return img, None
