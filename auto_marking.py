@@ -91,7 +91,7 @@ def data_maker(a):
                 j = random.choice(backs)
                 m += 1
                 print(k + ' ' + i + ' ' + str(a) + ' ' + str(m) + ' ' + str(o))
-                s = str(o) + str(a)
+                s = str(a) + str(o)
                 back = cv2.imread(backs_dir_path + '\\' + j)
                 data_output, xmin, ymin, xmax, ymax = data_marker(img, img_marked, back)
                 cv2.imwrite(output_dir_path + "\\images\\" + k + '\\' + s + '.jpg', data_output)
