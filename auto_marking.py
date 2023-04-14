@@ -85,9 +85,14 @@ def data_maker(a):
                 while m < total_cpu:
                     o = o + 1
                     if str(a) == '0':
-                        print('----------time now: ' + str(round(time.time() - time_start, 2)) + 's')
-                        print('----------time this: ' + str(round(time.time() - time_this, 2)) + 's')
-                        print('----------img total(about): ' + str(i_t * processes))
+                        time_now = round(time.time() - time_start, 2)
+                        print('----------time now: {} s'.format(time_now))
+                        print('----------time this: {} s'.format(round(time.time() - time_this, 2)))
+                        print('----------img total(about): {}'.format(i_t * processes))
+                        try:
+                            print('----------time left(about): {} min'.format(round(total*len(objs)/(i_t*processes/time_now)/60, 2)))
+                        except:
+                            pass
                         time_this = time.time()
                         i_t = i_t + 1
                     img = cv2.imread(images_dir_path + '\\' + k + '\\' + i)
