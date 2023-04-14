@@ -18,6 +18,7 @@ def n_random(loc, scale, min, max):
             break
     return n_r
 
+
 def random_flip(img, mode):
     if mode == 0:
         return img, None

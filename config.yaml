@@ -1,5 +1,5 @@
 # 每张图片与背景组合生成的图片总数，生成的图片总量可能有少量上下浮动
-total: 1200
+total: 8
 # 保存标注图片占百分比(0~100)
 save_marked: 5
 # 是否启用正态分布配置(还未加入代码中)
@@ -7,10 +7,13 @@ distribution: false
 # 保留空闲的cpu核心数量,如果你启用了超线程，建议写cpu物理核心数量
 cpu_free: 0
 # 图片路径设置
-backs_dir_path: auto_marking\backs
-images_dir_path: auto_marking\images
-marked_dir_path: auto_marking\images_marked
-output_dir_path: auto_marking\output
+dir_path:
+  back_in_root: true
+  root_dir_path: C:\auto_marking\
+  backs_dir_path: backs
+  images_dir_path: images
+  marked_dir_path: images_marked
+  output_dir_path: output
 # -----------------------------------------------------------------
 # 翻转配置
 flip:

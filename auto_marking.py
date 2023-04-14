@@ -1,15 +1,14 @@
-import random
 import time
 from funcs import *
 from txt_output import *
 import os
 import multiprocessing
 import yaml
-
+import sys
+from tqdm import tqdm
 
 time_start = time.time()
 time_this = time.time()
-
 i_t = 0
 yamlPath = 'config.yaml'
 with open(yamlPath, 'r', encoding='utf-8') as f:
@@ -17,10 +16,13 @@ with open(yamlPath, 'r', encoding='utf-8') as f:
 
 total = config['total']
 processes = multiprocessing.cpu_count() - config['cpu_free']
-backs_dir_path = config['backs_dir_path']
-images_dir_path = config['images_dir_path']
-marked_dir_path = config['marked_dir_path']
-output_dir_path = config['output_dir_path']
+if config['dir_path']['back_in_root']:
+    backs_dir_path = config['dir_path']['root_dir_path'] + config['dir_path']['backs_dir_path']
+else:
+    backs_dir_path = config['dir_path']['backs_dir_path']
+images_dir_path = config['dir_path']['root_dir_path'] + config['dir_path']['images_dir_path']
+marked_dir_path = config['dir_path']['root_dir_path'] + config['dir_path']['marked_dir_path']
+output_dir_path = config['dir_path']['root_dir_path'] + config['dir_path']['output_dir_path']
 
 
 def data_marker(img, img_marked, back):
@@ -64,64 +66,67 @@ def data_maker(a):
     objs = os.listdir(images_dir_path)
     backs = os.listdir(backs_dir_path)
     data_format = config['format']
-    for k in objs:
-        o = 0
-        imgs = os.listdir(images_dir_path + '\\' + k)
-        if not os.path.exists(output_dir_path + "\\images\\" + k):
-            print('mkdir:' + output_dir_path + "\\images\\" + k)
-            os.makedirs(output_dir_path + "\\images\\" + k)
-        if not os.path.exists(output_dir_path + "\\images_marked\\" + k):
-            print('mkdir:' + output_dir_path + "\\images_marked\\" + k)
-            os.makedirs(output_dir_path + "\\images_marked\\" + k)
-        if not os.path.exists(output_dir_path + "\\labels\\" + k):
-            print('mkdir:' + output_dir_path + "\\labels\\" + k)
-            os.makedirs(output_dir_path + "\\labels\\" + k)
-        for i in imgs:
-            m = 0
-            while m <= total_cpu:
-                o = o + 1
-                if str(a) == '0':
-                    print('----------time now: ' + str(round(time.time()-time_start, 2)) + 's')
-                    print('----------time this: ' + str(round(time.time()-time_this, 2)) + 's')
-                    print('----------img total(about): ' + str(i_t*processes))
-                    time_this = time.time()
-                    i_t = i_t + 1
-                img = cv2.imread(images_dir_path + '\\' + k + '\\' + i)
-                img_marked = cv2.imread(marked_dir_path + '\\' + k + '\\' + i)
-                j = random.choice(backs)
-                m += 1
-                s = str(a).rjust(3, '0') + str(o).rjust(5, '0')
-                print(k + ' ' + i + ' ' + str(m) + ' ' + str(s))
-                back = cv2.imread(backs_dir_path + '\\' + j)
-                data_output, xmin, ymin, xmax, ymax = data_marker(img, img_marked, back)
-                cv2.imwrite(output_dir_path + "\\images\\" + k + '\\' + s + '.jpg', data_output)
-                if random.randint(0, 100) <= config['save_marked']:
-                    cv2.rectangle(data_output, (xmin, ymin), (xmax, ymax), (0, 255, 1), 2)
-                    cv2.imwrite(output_dir_path + "\\images_marked\\" + k + '\\' + s + '.jpg', data_output)
-                if data_format == 'voc':
-                    picture_width = back.shape[1]
-                    picture_height = back.shape[0]
-                    txt = voc_xml_maker(s + '.jpg', xmin, ymin, xmax, ymax, k, picture_width, picture_height)
-                    label_name = s + '.xml'
-                elif data_format == 'yolo':
-                    y, x, n = data_output.shape
-                    txt = yolo_txt_maker(objs.index(k), xmin, ymin, xmax, ymax, x, y)
-                    label_name = s + '.txt'
-                else:
-                    raise Exception('wrong label_type')
-                path = output_dir_path + '\\labels\\' + k + '\\' + label_name
-                fw = open(path, 'w')
-                fw.write(txt)
-                fw.close()
-                # print(s)
+    with tqdm(range(total_cpu), total=total_cpu, unit='img', file=sys.stdout, desc=a) as pbar:
+        for k in objs:
+            o = 0
+            imgs = os.listdir(images_dir_path + '\\' + k)
+            if not os.path.exists(output_dir_path + "\\images\\" + k):
+                print('mkdir:' + output_dir_path + "\\images\\" + k)
+                os.makedirs(output_dir_path + "\\images\\" + k)
+            if not os.path.exists(output_dir_path + "\\images_marked\\" + k):
+                print('mkdir:' + output_dir_path + "\\images_marked\\" + k)
+                os.makedirs(output_dir_path + "\\images_marked\\" + k)
+            if not os.path.exists(output_dir_path + "\\labels\\" + k):
+                print('mkdir:' + output_dir_path + "\\labels\\" + k)
+                os.makedirs(output_dir_path + "\\labels\\" + k)
+            for i in imgs:
+                pbar.reset()
+                m = 0
+                while m < total_cpu:
+                    o = o + 1
+                    if str(a) == '0':
+                        print('----------time now: ' + str(round(time.time() - time_start, 2)) + 's')
+                        print('----------time this: ' + str(round(time.time() - time_this, 2)) + 's')
+                        print('----------img total(about): ' + str(i_t * processes))
+                        time_this = time.time()
+                        i_t = i_t + 1
+                    img = cv2.imread(images_dir_path + '\\' + k + '\\' + i)
+                    img_marked = cv2.imread(marked_dir_path + '\\' + k + '\\' + i)
+                    j = random.choice(backs)
+                    m += 1
+                    s = str(a).rjust(3, '0') + str(o).rjust(5, '0')
+                    # print(k + ' ' + i + ' ' + str(m) + ' ' + str(s))
+                    back = cv2.imread(backs_dir_path + '\\' + j)
+                    data_output, xmin, ymin, xmax, ymax = data_marker(img, img_marked, back)
+                    cv2.imwrite(output_dir_path + "\\images\\" + k + '\\' + s + '.jpg', data_output)
+                    if random.randint(0, 100) <= config['save_marked']:
+                        cv2.rectangle(data_output, (xmin, ymin), (xmax, ymax), (0, 255, 1), 2)
+                        cv2.imwrite(output_dir_path + "\\images_marked\\" + k + '\\' + s + '.jpg', data_output)
+                    if data_format == 'voc':
+                        picture_width = back.shape[1]
+                        picture_height = back.shape[0]
+                        txt = voc_xml_maker(s + '.jpg', xmin, ymin, xmax, ymax, k, picture_width, picture_height)
+                        label_name = s + '.xml'
+                    elif data_format == 'yolo':
+                        y, x, n = data_output.shape
+                        txt = yolo_txt_maker(objs.index(k), xmin, ymin, xmax, ymax, x, y)
+                        label_name = s + '.txt'
+                    else:
+                        raise Exception('wrong label_type')
+                    path = output_dir_path + '\\labels\\' + k + '\\' + label_name
+                    fw = open(path, 'w')
+                    fw.write(txt)
+                    fw.close()
+                    pbar.update(1)
+                    print('')
 
 
 if __name__ == "__main__":
-    if not len(os.listdir(config['output_dir_path'])) == 0:
-        print('此操作将删除output文件夹并重新生成，请确保你已经把数据在其他位置备份或决定丢弃')
+    if not len(output_dir_path) == 0:
+        print('此操作将删除{}文件夹并重新生成，请确保你已经把数据在其他位置备份或决定丢弃'.format(output_dir_path))
         if not input('输入y回车确认') == 'y':
             exit()
-    for root, dirs, files in os.walk(config['output_dir_path'], topdown=False):
+    for root, dirs, files in os.walk(output_dir_path, topdown=False):
         for name in files:
             os.remove(os.path.join(root, name))
         for name in dirs:
@@ -133,4 +138,4 @@ if __name__ == "__main__":
     pool.close()
     pool.join()
     print("Sub-process(es) done.")
-    print('Total time = ' + str(round(time.time()-time_start, 2)) + 's')
+    print('Total time = ' + str(round(time.time() - time_start, 2)) + 's')
