@@ -110,19 +110,19 @@ def img_maker(a):
                     # print(k + ' ' + i + ' ' + str(m) + ' ' + str(s))
                     back = cv2.imread(backs_dir_path + '\\' + j)
                     data_output, xmin, ymin, xmax, ymax = data_marker(img, img_marked, back)
-                    cv2.imwrite(output_dir_path + "\\train\\images\\" + k + '\\' + s + '.jpg', data_output)
+                    cv2.imwrite(output_dir_path + "\\train\\images\\" + k + '\\' + s + config['sign'] + '.jpg', data_output)
                     if random.randint(1, 100) <= config['save_marked']:
                         cv2.rectangle(data_output, (xmin, ymin), (xmax, ymax), (0, 255, 1), 2)
-                        cv2.imwrite(output_dir_path + "\\train\\images_marked\\" + k + '\\' + s + '.jpg', data_output)
+                        cv2.imwrite(output_dir_path + "\\train\\images_marked\\" + k + '\\' + s + config['sign'] + '.jpg', data_output)
                     if data_format == 'voc':
                         picture_width = back.shape[1]
                         picture_height = back.shape[0]
                         txt = voc_xml_maker(s + '.jpg', xmin, ymin, xmax, ymax, k, picture_width, picture_height)
-                        label_name = s + '.xml'
+                        label_name = s + config['sign'] + '.xml'
                     elif data_format == 'yolo':
                         y, x, n = data_output.shape
                         txt = yolo_txt_maker(objs.index(k), xmin, ymin, xmax, ymax, x, y)
-                        label_name = s + '.txt'
+                        label_name = s + config['sign'] + '.txt'
                     else:
                         raise Exception('wrong label_type')
                     path = output_dir_path + '\\train\\labels\\' + k + '\\' + label_name
@@ -142,16 +142,16 @@ def img_maker(a):
                     s = str(a).rjust(3, '0') + str(o).rjust(5, '0')
                     back = cv2.imread(backs_dir_path + '\\' + j)
                     data_output, xmin, ymin, xmax, ymax = data_marker(img, img_marked, back)
-                    cv2.imwrite(output_dir_path + "\\val\\images\\" + k + '\\' + s + '.jpg', data_output)
+                    cv2.imwrite(output_dir_path + "\\val\\images\\" + k + '\\' + s + config['sign'] + '.jpg', data_output)
                     if data_format == 'voc':
                         picture_width = back.shape[1]
                         picture_height = back.shape[0]
                         txt = voc_xml_maker(s + '.jpg', xmin, ymin, xmax, ymax, k, picture_width, picture_height)
-                        label_name = s + '.xml'
+                        label_name = s + config['sign'] + '.xml'
                     elif data_format == 'yolo':
                         y, x, n = data_output.shape
                         txt = yolo_txt_maker(objs.index(k), xmin, ymin, xmax, ymax, x, y)
-                        label_name = s + '.txt'
+                        label_name = s + config['sign'] + '.txt'
                     else:
                         raise Exception('wrong label_type')
                     path = output_dir_path + '\\val\\labels\\' + k + '\\' + label_name
