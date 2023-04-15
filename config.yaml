@@ -1,18 +1,25 @@
-# 每张图片与背景组合生成的图片总数，生成的图片总量可能有少量上下浮动
-total: 4000
+# 训练集每张图片生成的图片总数，如果不是cpu核心使用数的整数倍生成的图片总量可能有少量上下浮动
+total: 32
+# 训练集每张图片生成的图片总数，输入0则不生成
+val_total: 16
 # 保存标注图片占百分比(0~100)
-save_marked: 5
+save_marked: 0
 # 是否启用正态分布配置(还未加入代码中)
 distribution: false
 # 保留空闲的cpu核心数量,如果你启用了超线程，建议写cpu物理核心数量
 cpu_free: 0
 # 图片路径设置
 dir_path:
+  # 背景图是否在root_dir_path文件夹内
   back_in_root: true
+  # 存放数据的根文件夹
   root_dir_path: auto_marking\
+  # 背景图片文件夹
   backs_dir_path: backs
+  # 图片及标注文件夹
   images_dir_path: images
   marked_dir_path: images_marked
+  # 输出路径
   output_dir_path: output
 # -----------------------------------------------------------------
 # 翻转配置
@@ -25,6 +32,8 @@ brightness:
   a: 50
   # b:亮度值的随机加数
   b: 30
+  # c:亮度值的随机减数
+  c: 100
   # 输出最小和最大亮度值
   min: 2
   max: 254

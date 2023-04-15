@@ -20,6 +20,12 @@ def n_random(loc, scale, min, max):
 
 
 def random_flip(img, mode):
+    """
+    随机翻转
+    :param img: 图像输入
+    :param mode: 翻转模式
+    :return: 翻转的图像
+    """
     if mode == 0:
         return img, None
     elif mode == 1:
@@ -48,18 +54,19 @@ def random_flip(img, mode):
         raise Exception('wrong flip mode')
 
 
-def random_brightness(img, a=30, b=30, bright_min=2, bright_max=254):
+def random_brightness(img, a=30, b=30, c=50, bright_min=2, bright_max=254):
     """
     亮度随机变化
     :param img: 传入图像
     :param a: 亮度变化倍率最大范围（0-100），默认30
     :param b: 亮度变化大小最大范围（0-255），默认30
+    :param c: 亮度变化大小下范围（0-255），默认50
     :param bright_min: 返回图像最小亮度，默认2
     :param bright_max: 返回图像最大亮度，默认254
     :return: 返回图像
     """
     alpha = 0.01 * random.randint(-a, a) + 1
-    beta = random.randint(-b, b)
+    beta = random.randint(-c, b)
     return np.uint8(np.clip((alpha * img + beta), bright_min, bright_max))
 
 
