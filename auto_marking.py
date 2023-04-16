@@ -107,7 +107,6 @@ def img_maker(a):
                     j = random.choice(backs)
                     m += 1
                     s = str(a).rjust(3, '0') + str(o).rjust(5, '0')
-                    # print(k + ' ' + i + ' ' + str(m) + ' ' + str(s))
                     back = cv2.imread(backs_dir_path + '\\' + j)
                     data_output, xmin, ymin, xmax, ymax = data_marker(img, img_marked, back)
                     cv2.imwrite(output_dir_path + "\\train\\images\\" + k + '\\' + s + config['sign'] + '.jpg', data_output)
