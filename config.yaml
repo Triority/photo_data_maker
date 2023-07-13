@@ -1,24 +1,26 @@
 # 训练集每张图片生成的图片总数，如果不是cpu核心使用数的整数倍生成的图片总量可能有少量上下浮动
-total: 4800
+total: 1280
 # 验证集每张图片生成的图片总数，输入0则不生成
 val_total: 160
 # 保存标注图片占百分比(0~100)
-save_marked: 5
+save_marked: 25
 # 保留空闲的cpu核心数量,如果你启用了超线程，建议写cpu物理核心数量
 cpu_free: 0
-# 图片路径设置
+# 输入图片路径设置
 dir_path:
   # 背景图是否在root_dir_path文件夹内
   back_in_root: true
-  # 存放数据的根文件夹
+  # 存放数据的根文件夹(以/或\结尾，除此以外的其他都不加)
   root_dir_path: F:\auto_marking\
   # 背景图片文件夹
   backs_dir_path: backs
   # 图片及标注文件夹
   images_dir_path: images
   marked_dir_path: images_marked
-  # 输出路径
-  output_dir_path: output
+# 设置输出路径
+output_dir_path: D:\auto_marking\output
+# 设置是否按分类输出,如果不分类将不会自动生成验证集
+output_classification: false
 # 当多个设备合作生成数据集时，在输出文件名称末尾加入此标识避免重复，不想加入可设置为空字符串
 sign: '_0'
 # -----------------------------------------------------------------
@@ -29,14 +31,14 @@ flip:
 # 亮度变换参数
 brightness:
   # a:亮度值的随机倍数（百分比）
-  a: 50
+  a: 70
   # b:亮度值的随机加数
   b: 50
   # c:亮度值的随机减数
-  c: 80
+  c: 50
   # 输出最小和最大亮度值
-  min: 2
-  max: 254
+  min: 10
+  max: 250
 # 图片大小参数
 size:
   # 叠加图片在背景图像长宽占百分比
@@ -45,7 +47,7 @@ size:
 # 模糊处理参数
 blur:
   # 高斯滤波范围，模糊处理边长为2r+1，默认1
-  r: 1
+  r: 3
 # 透视变换参数
 perspective:
   # 随机宽度范围，指每个角位置变化距离占边长百分比，应介于0-0.5，数值越大随机范围越大
@@ -58,4 +60,4 @@ perspective:
   # 若前一参数对称模式为2即上下对称，此参数为1表示等腰梯形左宽右窄，此参数为2反之.
   direction: 0
 # 输出数据格式。可选项：yolo / voc
-format: yolo
+format: voc

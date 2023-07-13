@@ -22,7 +22,7 @@ else:
     backs_dir_path = config['dir_path']['backs_dir_path']
 images_dir_path = config['dir_path']['root_dir_path'] + config['dir_path']['images_dir_path']
 marked_dir_path = config['dir_path']['root_dir_path'] + config['dir_path']['marked_dir_path']
-output_dir_path = config['dir_path']['root_dir_path'] + config['dir_path']['output_dir_path']
+output_dir_path = config['output_dir_path']
 
 
 def data_marker(img, img_marked, back):
@@ -66,25 +66,37 @@ def img_maker(a):
     objs = os.listdir(images_dir_path)
     backs = os.listdir(backs_dir_path)
     data_format = config['format']
+    output_classification = config['output_classification']
     with tqdm(range(total_cpu), total=total_cpu, unit='img', file=sys.stdout, desc=a) as pbar:
         for k in objs:
             o = 0
-            if not os.path.exists(output_dir_path + "\\train\\images\\" + k):
-                print('mkdir:' + output_dir_path + "\\train\\images\\" + k)
-                os.makedirs(output_dir_path + "\\train\\images\\" + k)
-            if config['save_marked'] and not os.path.exists(output_dir_path + "\\train\\images_marked\\" + k):
-                print('mkdir:' + output_dir_path + "\\train\\images_marked\\" + k)
-                os.makedirs(output_dir_path + "\\train\\images_marked\\" + k)
-            if not os.path.exists(output_dir_path + "\\train\\labels\\" + k):
-                print('mkdir:' + output_dir_path + "\\train\\labels\\" + k)
-                os.makedirs(output_dir_path + "\\train\\labels\\" + k)
-            if config['val_total']:
-                if not os.path.exists(output_dir_path + "\\val\\images\\" + k):
-                    print('mkdir:' + output_dir_path + "\\val\\images\\" + k)
-                    os.makedirs(output_dir_path + "\\val\\images\\" + k)
-                if not os.path.exists(output_dir_path + "\\val\\labels\\" + k):
-                    print('mkdir:' + output_dir_path + "\\val\\labels\\" + k)
-                    os.makedirs(output_dir_path + "\\val\\labels\\" + k)
+            if output_classification:
+                if not os.path.exists(output_dir_path + "\\train\\images\\" + k):
+                    print('mkdir:' + output_dir_path + "\\train\\images\\" + k)
+                    os.makedirs(output_dir_path + "\\train\\images\\" + k)
+                if config['save_marked'] and not os.path.exists(output_dir_path + "\\train\\images_marked\\" + k):
+                    print('mkdir:' + output_dir_path + "\\train\\images_marked\\" + k)
+                    os.makedirs(output_dir_path + "\\train\\images_marked\\" + k)
+                if not os.path.exists(output_dir_path + "\\train\\labels\\" + k):
+                    print('mkdir:' + output_dir_path + "\\train\\labels\\" + k)
+                    os.makedirs(output_dir_path + "\\train\\labels\\" + k)
+                if config['val_total']:
+                    if not os.path.exists(output_dir_path + "\\val\\images\\" + k):
+                        print('mkdir:' + output_dir_path + "\\val\\images\\" + k)
+                        os.makedirs(output_dir_path + "\\val\\images\\" + k)
+                    if not os.path.exists(output_dir_path + "\\val\\labels\\" + k):
+                        print('mkdir:' + output_dir_path + "\\val\\labels\\" + k)
+                        os.makedirs(output_dir_path + "\\val\\labels\\" + k)
+            else:
+                if not os.path.exists(output_dir_path + "\\JPEGImages"):
+                    print('mkdir:' + output_dir_path + "\\JPEGImages")
+                    os.makedirs(output_dir_path + "\\JPEGImages")
+                if not os.path.exists(output_dir_path + '\\Annotations'):
+                    print('mkdir:' + output_dir_path + '\\Annotations')
+                    os.makedirs(output_dir_path + '\\Annotations')
+                if config['save_marked'] and not os.path.exists(output_dir_path + "\\images_marked\\" + k):
+                    print('mkdir:' + output_dir_path + "\\images_marked\\" + k)
+                    os.makedirs(output_dir_path + "\\images_marked\\" + k)
             imgs = os.listdir(images_dir_path + '\\' + k)
             for i in imgs:
                 pbar.reset()
@@ -106,13 +118,23 @@ def img_maker(a):
                     img_marked = cv2.imread(marked_dir_path + '\\' + k + '\\' + i)
                     j = random.choice(backs)
                     m += 1
-                    s = str(a).rjust(3, '0') + str(o).rjust(5, '0')
+                    s = str(k) + "-" + str(i) + "-" + str(a).rjust(3, '0') + str(o).rjust(5, '0')
                     back = cv2.imread(backs_dir_path + '\\' + j)
                     data_output, xmin, ymin, xmax, ymax = data_marker(img, img_marked, back)
-                    cv2.imwrite(output_dir_path + "\\train\\images\\" + k + '\\' + s + config['sign'] + '.jpg', data_output)
+                    if output_classification:
+                        cv2.imwrite(output_dir_path + "\\train\\images\\" + k + '\\' + s + config['sign'] + '.jpg',
+                                    data_output)
+                    else:
+                        cv2.imwrite(output_dir_path + "\\JPEGImages\\" + s + config['sign'] + '.jpg',
+                                    data_output)
                     if random.randint(1, 100) <= config['save_marked']:
                         cv2.rectangle(data_output, (xmin, ymin), (xmax, ymax), (0, 255, 1), 2)
-                        cv2.imwrite(output_dir_path + "\\train\\images_marked\\" + k + '\\' + s + config['sign'] + '.jpg', data_output)
+                        if output_classification:
+                            cv2.imwrite(output_dir_path + "\\train\\images_marked\\" + k + '\\' + s + config['sign'] + '.jpg', data_output)
+                        else:
+                            cv2.imwrite(
+                                output_dir_path + "\\images_marked\\" + k + '\\' + s + config['sign'] + '.jpg',
+                                data_output)
                     if data_format == 'voc':
                         picture_width = back.shape[1]
                         picture_height = back.shape[0]
@@ -124,14 +146,17 @@ def img_maker(a):
                         label_name = s + config['sign'] + '.txt'
                     else:
                         raise Exception('wrong label_type')
-                    path = output_dir_path + '\\train\\labels\\' + k + '\\' + label_name
+                    if output_classification:
+                        path = output_dir_path + '\\train\\labels\\' + k + '\\' + label_name
+                    else:
+                        path = output_dir_path + '\\Annotations\\' + label_name
                     fw = open(path, 'w')
                     fw.write(txt)
                     fw.close()
                     pbar.update(1)
                     print('')
                 m = 0
-                while m < int(config['val_total'] / processes):
+                while m < int(config['val_total'] / processes) and output_classification:
                     o = o + 1
                     print('processes' + str(a) + ': making val......')
                     img = cv2.imread(images_dir_path + '\\' + k + '\\' + i)
