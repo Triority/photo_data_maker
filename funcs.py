@@ -77,8 +77,11 @@ def random_blur(img, r=3):
     :param r: 高斯滤波范围，模糊处理边长为2r+1，默认3
     :return: 返回图像
     """
-    n = random.randint(0, r)
-    return cv2.blur(img, (2 * n + 1, 2 * n + 1))
+    if r == 1:
+        return img
+    else:
+        n = random.randint(0, r)
+        return cv2.blur(img, (2 * n + 1, 2 * n + 1))
 
 
 def random_perspective(img, random_range=0.3, symmetry_mode=0, symmetry_direction=0):
@@ -199,3 +202,37 @@ def overlay(img, back):
     dst = cv2.add(img1_bg, img2_fg)
     back[y:rows + y, x:cols + x] = dst
     return back, x, y
+
+
+def random_channel_gain(image, random_range=0.4):
+    """
+    三通道RGB随机浮动。这段代码是chatGPT写的hhh
+    :param image: 传入图片
+    :param random_range: 随机范围，范围0<x<2，0为无变化
+    :return: 图片
+    """
+    if random_range < 0 or random_range > 2:
+        raise ValueError("Random range should be between 0 and 2 (inclusive)")
+
+    # Split the image into channels (B, G, R)
+    b, g, r = cv2.split(image)
+
+    # Generate random gains for each channel
+    gain_b = np.random.uniform(1.0 - random_range, 1.0 + random_range)
+    gain_g = np.random.uniform(1.0 - random_range, 1.0 + random_range)
+    gain_r = np.random.uniform(1.0 - random_range, 1.0 + random_range)
+
+    # Clip the gains to be within 0 and 2
+    gain_b = np.clip(gain_b, 0, 2)
+    gain_g = np.clip(gain_g, 0, 2)
+    gain_r = np.clip(gain_r, 0, 2)
+
+    # Multiply each channel with its respective gain
+    b = np.uint8(np.clip(b * gain_b, 0, 255))
+    g = np.uint8(np.clip(g * gain_g, 0, 255))
+    r = np.uint8(np.clip(r * gain_r, 0, 255))
+
+    # Merge the modified channels back into an image
+    modified_image = cv2.merge((b, g, r))
+
+    return modified_image

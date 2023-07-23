@@ -37,6 +37,9 @@ def data_marker(img, img_marked, back):
                             , bright_min=config['brightness']['min'], bright_max=config['brightness']['max'])
     back = random_brightness(back, a=config['brightness']['a'], b=config['brightness']['b'], c=config['brightness']['c']
                              , bright_min=config['brightness']['min'], bright_max=config['brightness']['max'])
+    # RGB变化
+    img = random_channel_gain(img, random_range=config['brightness']['RGB'])
+    back = random_channel_gain(back, random_range=config['brightness']['RGB'])
     # 缩放
     r = random.randint(config['size']['min'], config['size']['max']) / 100 * min(back_h / img_h, back_w / img_w)
     img = cv2.resize(img, (0, 0), fx=r, fy=r, interpolation=cv2.INTER_NEAREST)
