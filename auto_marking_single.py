@@ -22,7 +22,7 @@ else:
     backs_dir_path = config['dir_path']['backs_dir_path']
 images_dir_path = config['dir_path']['root_dir_path'] + config['dir_path']['images_dir_path']
 marked_dir_path = config['dir_path']['root_dir_path'] + config['dir_path']['marked_dir_path']
-output_dir_path = config['dir_path']['root_dir_path'] + config['dir_path']['output_dir_path']
+output_dir_path = config['output_dir_path']
 
 
 def data_marker(img, img_marked, back):
@@ -33,10 +33,13 @@ def data_marker(img, img_marked, back):
     img_marked = cv2.flip(img_marked, ret)
     back, ret = random_flip(back, config['flip']['mode'])
     # 亮度随机变化
-    img = random_brightness(img, a=config['brightness']['a'], b=config['brightness']['b']
+    img = random_brightness(img, a=config['brightness']['a'], b=config['brightness']['b'], c=config['brightness']['c']
                             , bright_min=config['brightness']['min'], bright_max=config['brightness']['max'])
-    back = random_brightness(back, a=config['brightness']['a'], b=config['brightness']['b']
+    back = random_brightness(back, a=config['brightness']['a'], b=config['brightness']['b'], c=config['brightness']['c']
                              , bright_min=config['brightness']['min'], bright_max=config['brightness']['max'])
+    # RGB变化
+    img = random_channel_gain(img, random_range=config['brightness']['RGB'])
+    back = random_channel_gain(back, random_range=config['brightness']['RGB'])
     # 缩放
     r = random.randint(config['size']['min'], config['size']['max']) / 100 * min(back_h / img_h, back_w / img_w)
     img = cv2.resize(img, (0, 0), fx=r, fy=r, interpolation=cv2.INTER_NEAREST)
@@ -60,66 +63,129 @@ def data_marker(img, img_marked, back):
     return back, xmin, ymin, xmax, ymax
 
 
-def data_maker(a):
+def img_maker(a):
     global time_this, i_t
     total_cpu = int(total / processes)
     objs = os.listdir(images_dir_path)
     backs = os.listdir(backs_dir_path)
     data_format = config['format']
+    output_classification = config['output_classification']
     with tqdm(range(total_cpu), total=total_cpu, unit='img', file=sys.stdout, desc=a) as pbar:
         for k in objs:
             o = 0
+            if output_classification:
+                if not os.path.exists(output_dir_path + "\\train\\images\\" + k):
+                    print('mkdir:' + output_dir_path + "\\train\\images\\" + k)
+                    os.makedirs(output_dir_path + "\\train\\images\\" + k)
+                if config['save_marked'] and not os.path.exists(output_dir_path + "\\train\\images_marked\\" + k):
+                    print('mkdir:' + output_dir_path + "\\train\\images_marked\\" + k)
+                    os.makedirs(output_dir_path + "\\train\\images_marked\\" + k)
+                if not os.path.exists(output_dir_path + "\\train\\labels\\" + k):
+                    print('mkdir:' + output_dir_path + "\\train\\labels\\" + k)
+                    os.makedirs(output_dir_path + "\\train\\labels\\" + k)
+                if config['val_total']:
+                    if not os.path.exists(output_dir_path + "\\val\\images\\" + k):
+                        print('mkdir:' + output_dir_path + "\\val\\images\\" + k)
+                        os.makedirs(output_dir_path + "\\val\\images\\" + k)
+                    if not os.path.exists(output_dir_path + "\\val\\labels\\" + k):
+                        print('mkdir:' + output_dir_path + "\\val\\labels\\" + k)
+                        os.makedirs(output_dir_path + "\\val\\labels\\" + k)
+            else:
+                if not os.path.exists(output_dir_path + "\\JPEGImages"):
+                    print('mkdir:' + output_dir_path + "\\JPEGImages")
+                    os.makedirs(output_dir_path + "\\JPEGImages")
+                if not os.path.exists(output_dir_path + '\\Annotations'):
+                    print('mkdir:' + output_dir_path + '\\Annotations')
+                    os.makedirs(output_dir_path + '\\Annotations')
+                if config['save_marked'] and not os.path.exists(output_dir_path + "\\images_marked\\" + k):
+                    print('mkdir:' + output_dir_path + "\\images_marked\\" + k)
+                    os.makedirs(output_dir_path + "\\images_marked\\" + k)
             imgs = os.listdir(images_dir_path + '\\' + k)
-            if not os.path.exists(output_dir_path + "\\images\\" + k):
-                print('mkdir:' + output_dir_path + "\\images\\" + k)
-                os.makedirs(output_dir_path + "\\images\\" + k)
-            if not os.path.exists(output_dir_path + "\\images_marked\\" + k):
-                print('mkdir:' + output_dir_path + "\\images_marked\\" + k)
-                os.makedirs(output_dir_path + "\\images_marked\\" + k)
-            if not os.path.exists(output_dir_path + "\\labels\\" + k):
-                print('mkdir:' + output_dir_path + "\\labels\\" + k)
-                os.makedirs(output_dir_path + "\\labels\\" + k)
             for i in imgs:
                 pbar.reset()
                 m = 0
                 while m < total_cpu:
                     o = o + 1
                     if str(a) == '0':
-                        print('----------time now: ' + str(round(time.time() - time_start, 2)) + 's')
-                        print('----------time this: ' + str(round(time.time() - time_this, 2)) + 's')
-                        print('----------img total(about): ' + str(i_t * processes))
+                        time_now = round(time.time() - time_start, 2)
+                        print('----------time now: {} s'.format(time_now))
+                        print('----------time this: {} s'.format(round(time.time() - time_this, 2)))
+                        print('----------img total(about): {}'.format(i_t * processes))
+                        try:
+                            print('----------time left(about): {} min(without val)'.format(round(total*len(objs)/(i_t*processes/time_now)/60, 2)))
+                        except:
+                            pass
                         time_this = time.time()
                         i_t = i_t + 1
                     img = cv2.imread(images_dir_path + '\\' + k + '\\' + i)
                     img_marked = cv2.imread(marked_dir_path + '\\' + k + '\\' + i)
                     j = random.choice(backs)
                     m += 1
-                    s = str(a).rjust(3, '0') + str(o).rjust(5, '0')
-                    # print(k + ' ' + i + ' ' + str(m) + ' ' + str(s))
+                    s = str(k) + "-" + str(i) + "-" + str(a).rjust(3, '0') + str(o).rjust(5, '0')
                     back = cv2.imread(backs_dir_path + '\\' + j)
                     data_output, xmin, ymin, xmax, ymax = data_marker(img, img_marked, back)
-                    cv2.imwrite(output_dir_path + "\\images\\" + k + '\\' + s + '.jpg', data_output)
-                    if random.randint(0, 100) <= config['save_marked']:
+                    if output_classification:
+                        cv2.imwrite(output_dir_path + "\\train\\images\\" + k + '\\' + s + config['sign'] + '.jpg',
+                                    data_output)
+                    else:
+                        cv2.imwrite(output_dir_path + "\\JPEGImages\\" + s + config['sign'] + '.jpg',
+                                    data_output)
+                    if random.randint(1, 100) <= config['save_marked']:
                         cv2.rectangle(data_output, (xmin, ymin), (xmax, ymax), (0, 255, 1), 2)
-                        cv2.imwrite(output_dir_path + "\\images_marked\\" + k + '\\' + s + '.jpg', data_output)
+                        if output_classification:
+                            cv2.imwrite(output_dir_path + "\\train\\images_marked\\" + k + '\\' + s + config['sign'] + '.jpg', data_output)
+                        else:
+                            cv2.imwrite(
+                                output_dir_path + "\\images_marked\\" + k + '\\' + s + config['sign'] + '.jpg',
+                                data_output)
                     if data_format == 'voc':
                         picture_width = back.shape[1]
                         picture_height = back.shape[0]
                         txt = voc_xml_maker(s + '.jpg', xmin, ymin, xmax, ymax, k, picture_width, picture_height)
-                        label_name = s + '.xml'
+                        label_name = s + config['sign'] + '.xml'
                     elif data_format == 'yolo':
                         y, x, n = data_output.shape
                         txt = yolo_txt_maker(objs.index(k), xmin, ymin, xmax, ymax, x, y)
-                        label_name = s + '.txt'
+                        label_name = s + config['sign'] + '.txt'
                     else:
                         raise Exception('wrong label_type')
-                    path = output_dir_path + '\\labels\\' + k + '\\' + label_name
+                    if output_classification:
+                        path = output_dir_path + '\\train\\labels\\' + k + '\\' + label_name
+                    else:
+                        path = output_dir_path + '\\Annotations\\' + label_name
                     fw = open(path, 'w')
                     fw.write(txt)
                     fw.close()
                     pbar.update(1)
                     print('')
+                m = 0
+                while m < int(config['val_total'] / processes) and output_classification:
+                    o = o + 1
+                    print('processes' + str(a) + ': making val......')
+                    img = cv2.imread(images_dir_path + '\\' + k + '\\' + i)
+                    img_marked = cv2.imread(marked_dir_path + '\\' + k + '\\' + i)
+                    j = random.choice(backs)
+                    m += 1
+                    s = str(a).rjust(3, '0') + str(o).rjust(5, '0')
+                    back = cv2.imread(backs_dir_path + '\\' + j)
+                    data_output, xmin, ymin, xmax, ymax = data_marker(img, img_marked, back)
+                    cv2.imwrite(output_dir_path + "\\val\\images\\" + k + '\\' + s + config['sign'] + '.jpg', data_output)
+                    if data_format == 'voc':
+                        picture_width = back.shape[1]
+                        picture_height = back.shape[0]
+                        txt = voc_xml_maker(s + '.jpg', xmin, ymin, xmax, ymax, k, picture_width, picture_height)
+                        label_name = s + config['sign'] + '.xml'
+                    elif data_format == 'yolo':
+                        y, x, n = data_output.shape
+                        txt = yolo_txt_maker(objs.index(k), xmin, ymin, xmax, ymax, x, y)
+                        label_name = s + config['sign'] + '.txt'
+                    else:
+                        raise Exception('wrong label_type')
+                    path = output_dir_path + '\\val\\labels\\' + k + '\\' + label_name
+                    fw = open(path, 'w')
+                    fw.write(txt)
+                    fw.close()
 
 
 if __name__ == "__main__":
-    data_maker('a')
+    img_maker('a')

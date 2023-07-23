@@ -190,14 +190,11 @@ def img_maker(a):
 
 if __name__ == "__main__":
     if not len(output_dir_path) == 0:
-        print('此操作将删除{}文件夹并重新生成，请确保你已经把数据在其他位置备份或决定丢弃'.format(output_dir_path))
-        if not input('输入y回车确认') == 'y':
-            exit()
-    for root, dirs, files in os.walk(output_dir_path, topdown=False):
-        for name in files:
-            os.remove(os.path.join(root, name))
-        for name in dirs:
-            os.rmdir(os.path.join(root, name))
+        for root, dirs, files in os.walk(output_dir_path, topdown=False):
+            for name in files:
+                os.remove(os.path.join(root, name))
+            for name in dirs:
+                os.rmdir(os.path.join(root, name))
     pl = multiprocessing.Manager().Lock()
     pool = multiprocessing.Pool(processes)
     for i in range(processes):
