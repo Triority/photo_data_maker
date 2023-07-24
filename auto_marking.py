@@ -26,6 +26,8 @@ output_dir_path = config['output_dir_path']
 
 
 def data_marker(img, img_marked, back):
+    if config['resize']['do']:
+        back = cv2.resize(back, (config['resize']['height'], config['resize']['width']))
     img_h, img_w = img.shape[:2]
     back_h, back_w = back.shape[:2]
     # 初始图像翻转
