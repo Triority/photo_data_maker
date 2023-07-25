@@ -3,6 +3,7 @@
 + `video2img.py`程序可以提取视频帧
 + `photos2video.py`是用于延时摄影照片合成视频的程序(别问我为什么放在这个仓库)
 + `rename_all.py`用于给图片批量重命名，一些奇怪符号好似导致yolov4-tiny在建立索引出错
++ `pytorch_model_resave.py`用于转换模型到旧版本pytorch的格式
 + `auto_marking.py`用于生成图片数据集，只解释一下这个程序
 
 ## 生成步骤
