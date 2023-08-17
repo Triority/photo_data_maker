@@ -1,7 +1,9 @@
 import torch
 import os
 
+# 旧文件，新版本
 models_old_path = 'models_old'
+# 输出文件，旧版本
 models_new_path = 'models_new'
 
 for i in os.listdir(models_old_path):
