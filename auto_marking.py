@@ -191,7 +191,7 @@ def img_maker(a):
 
 
 if __name__ == "__main__":
-    if not len(output_dir_path) == 0:
+    if config['del_out'] and not len(output_dir_path) == 0:
         for root, dirs, files in os.walk(output_dir_path, topdown=False):
             for name in files:
                 os.remove(os.path.join(root, name))
