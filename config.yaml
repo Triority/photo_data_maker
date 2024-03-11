@@ -1,9 +1,9 @@
 # 训练集每张图片生成的图片总数，如果不是cpu核心使用数的整数倍生成的图片总量可能有少量上下浮动
-total: 512
+total: 960
 # 验证集每张图片生成的图片总数，输入0则不生成
-val_total: 160
+val_total: 960
 # 保存标注图片占百分比(0~100)
-save_marked: 20
+save_marked: 10
 # 保留空闲的cpu核心数量,如果你启用了超线程，建议写cpu物理核心数量
 cpu_free: 0
 # 输入图片路径设置
@@ -11,18 +11,18 @@ dir_path:
   # 背景图是否在root_dir_path文件夹内
   back_in_root: true
   # 存放数据的根文件夹(以/或\结尾，除此以外的其他都不加)
-  root_dir_path: F:\auto_marking\
+  root_dir_path: E:\auto_marking\
   # 背景图片文件夹
   backs_dir_path: backs
   # 图片及标注文件夹
   images_dir_path: images
   marked_dir_path: images_marked
 # 设置输出路径
-output_dir_path: I:\auto_marking\output
+output_dir_path: E:\auto_marking\output
 # 设置是否按分类输出,如果不分类将不会自动生成验证集
 output_classification: false
 # 当多个设备合作生成数据集时，在输出文件名称末尾加入此标识避免重复，不想加入可设置为空字符串
-sign: '_0'
+sign: '_1'
 # -----------------------------------------------------------------
 # 翻转配置
 flip:
