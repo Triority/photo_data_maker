@@ -6,6 +6,7 @@
 + `rename_all.py`用于给图片批量重命名，一些奇怪符号好似导致yolov4-tiny在建立索引出错
 + `pytorch_model_resave.py`用于转换模型到旧版本pytorch的格式
 + `auto_marking.py`用于生成图片数据集，只解释一下这个程序
++ `get_classes.py`懒人专用程序，可以直接把文件夹内文件夹名字打印出来，用于yolov4_tiny训练时要写的`cls_classes.txt`
 
 ## 生成原理
 我的需求是使用yolo识别几十个带有不同图案的白色背景的矩形泡沫板(用于智能车竞赛讯飞组的识别任务)。
