@@ -1,3 +1,6 @@
+## 博客文章
+还有一部分内容位于[我blog的文章里](https://triority.cc/2022/img-data-marker/)
+
 ## 文件和程序说明
 + `backs`文件夹是我随机找到的图片，可作为随机背景
 + `images`和`images_marked`为在18届智能车讯飞组比赛中需要的数据和绿色椭圆形标注
